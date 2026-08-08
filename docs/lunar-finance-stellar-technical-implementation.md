@@ -163,7 +163,7 @@ Extend the routing engine to simulate every candidate execution path — DEX and
 
 ### 6.3 Success metric
 
-Target: **under 2% of signed, submitted Stellar-route transactions failing on-chain**, measured over a trailing 30-day window beginning four weeks after production launch (allowing one tuning cycle). Failure rates are tracked per route type (SDEX, Soroban AMM, cross-chain) from day one so the metric is observable, not aspirational.
+Target: **under 2% of signed, submitted Stellar-route transactions failing on-chain**, measured over a trailing 30-day window beginning four weeks after production launch (allowing one tuning cycle). Failure rates are tracked per route type (Soroban AMM, Stellar Broker, cross-chain) from day one so the metric is observable, not aspirational.
 
 ### 6.4 Key dependencies
 
