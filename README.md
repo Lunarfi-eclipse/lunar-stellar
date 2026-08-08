@@ -1,9 +1,5 @@
 # Lunar Finance × Stellar Integration — Technical Implementation Plan
 
-**Prepared by:** Lunar Finance
-**Related submission:** Stellar Community Fund Application (Integration Track)
-**Status:** Planning — implementation begins at project start; this repository holds the implementation plan
-**Last updated:** August 2026
 
 ---
 
