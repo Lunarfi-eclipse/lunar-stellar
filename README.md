@@ -14,7 +14,7 @@ This document sets out the technical implementation plan for bringing Stellar in
 
 Lunar Finance operates aggregation infrastructure spanning 40+ DeFi protocol integrations across multiple ecosystems. Stellar is added as a new set of adapters inside that existing system — not a parallel, Stellar-specific stack.
 
-The plan is deliberately phased: a small set of high-liquidity sources is integrated and proven on testnet first, expanded on mainnet only after the core path works end to end. Where an external protocol's Stellar support is not yet confirmed, this document says so explicitly rather than assuming it (see Sections 4, 8, and 9).
+The plan is deliberately phased: a small set of high-liquidity sources is integrated and proven on testnet first, expanded on mainnet only after the core path works end to end. Where an external protocol's Stellar support is not yet confirmed, this document says so explicitly rather than assuming it.
 
 ---
 
