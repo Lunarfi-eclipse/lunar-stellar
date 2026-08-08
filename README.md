@@ -1,11 +1,5 @@
 # Technical Implementation Plan: Lunar Finance × Stellar Integration
 
-**Prepared by:** Lunar Finance
-**Related submission:** Stellar Community Fund Application (Integration Track)
-**Scope:** Stellar DEX Aggregation, Cross-Chain Meta Aggregation, Stellar Wallet Connect Support, Advanced Routing Engine with Transaction Simulation
-
----
-
 ## 1. Overview
 
 This document sets out our technical implementation plan for bringing Stellar into Lunar Finance's unified routing system. We are building four integrated capabilities:
