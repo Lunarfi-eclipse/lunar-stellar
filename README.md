@@ -222,21 +222,6 @@ If a preferred route is unavailable or fails simulation, the engine falls back t
 - Aquarius, Soroswap, and SushiSwap router contracts remain deployed and documented on mainnet.
 - Protocol support in Section 4.2 was verified against live deployments in August 2026 and is re-checked at integration time — this document intentionally avoids committing to third-party roadmaps.
 
-## 10. Out of Scope
-
-- Changes to Lunar's fiat on/off-ramp
-- Market making or liquidity provisioning on Stellar venues
-- Custodial key management of any kind
-- Wallets outside the Stellar Wallets Kit ecosystem at launch
-
----
-
-## 11. Team and Delivery Track Record
-
-- Production aggregation infrastructure spanning 40+ DeFi protocol integrations (DEX aggregators, bridges, and intent protocols) across EVM chains, Solana, and others.
-- The adapter architecture described here is the one running in production today — Stellar adds adapters to a proven system rather than standing up a new one.
-- The team covers backend, frontend, blockchain, and infrastructure engineering, with prior delivery of cross-chain swap and bridge products to retail users; the simulation-first design in Section 6 comes directly from that operating experience.
-
 ---
 
 *This document is the technical companion to our Stellar Community Fund Application (Integration Track).*
