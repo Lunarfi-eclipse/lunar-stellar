@@ -185,38 +185,6 @@ Consistent with our approach elsewhere in the app, every route we show a user su
 
 ---
 
-## 8. Implementation Milestones
-
-**Milestone 1 (Weeks 1–6): Core Stellar Integration**
-- Freighter and Lobstr wallet integration
-- Basic routing engine support for XLM, USDC, EURC, AQUA
-- Integration of 2 major Stellar DEXs
-- Initial cross-chain quote support (read-only routing layer)
-- Technical discovery and adapter design for the Stellar Broker integration
-
-**Milestone 2 (Weeks 7–12): Aggregation Expansion**
-- Remaining Stellar DEX integrations (5+ sources total)
-- Integration of 2 cross-chain systems (one intent-based, one bridge-based)
-- Full routing optimization across DEX + cross-chain paths
-- Fee estimation and execution simulation layer live
-
-**Milestone 3 (Weeks 13–16): Launch & Optimization**
-- Full production launch on Stellar routes
-- UI/UX optimization for swap and bridge flows
-- Performance tuning (latency, success rate, routing efficiency)
-- Security review and stress testing, including simulated failure-path scenarios
-
----
-
-## 9. Why We're Well-Positioned to Deliver This
-
-- We already operate production-grade aggregation infrastructure spanning 40+ DeFi protocol integrations across multiple ecosystems.
-- Our modular adapter architecture is purpose-built for rapid protocol integration — Stellar is a new set of adapters within a system we already run in production, not a new system.
-- Our team covers backend, frontend, blockchain, and infrastructure engineering, giving us end-to-end ownership of this integration from routing logic through to UI.
-- We bring direct experience shipping cross-chain and DEX aggregation products to both retail and institutional users, which informs the reliability and simulation-first approach detailed in Section 6.
-
----
-
 *This document is a technical companion to our Stellar Community Fund Application (Integration Track).*
 
 ## Repository Structure
