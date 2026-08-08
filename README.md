@@ -33,9 +33,8 @@ The plan is deliberately phased: a small set of high-liquidity sources is integr
                      |                  |
   +------------------v-------+   +------v---------------------+
   | Stellar DEX Adapters     |   | Cross-Chain Adapters       |
-  | (SDEX path payments,     |   | (Allbridge, Near Intents,  |
-  |  Aquarius, Soroswap,     |   |  Axelar, CCTP)             |
-  |  SushiSwap,              |   |                            |
+  | (Soroswap, Aquarius,     |   | (Allbridge, Near Intents,  |
+  |  SushiSwap,              |   |  Axelar, CCTP)             |
   |  Stellar Broker)         |   |                            |
   +------------------+-------+   +------+---------------------+
                      |                  |
@@ -65,28 +64,25 @@ Aggregate liquidity from multiple Stellar venues into a single routing layer, so
 
 | Source | Type | Integration method |
 |---|---|---|
-| Stellar SDEX (native order book) | Protocol-level order book | Horizon path payment and orderbook endpoints; no smart contract required |
 | Soroswap | Soroban-native DEX/aggregator | Router contract via Soroban RPC, as a liquidity source in our aggregation layer |
 | Aquarius (AQUA) | Soroban AMM — largest liquidity hub on Stellar (~$44M TVL, DefiLlama, Aug 2026) | AMM router contract via Soroban RPC |
 | SushiSwap | Soroban DEX with v3-style concentrated liquidity, live on Stellar since Feb 2026 | Router contract via Soroban RPC — extends the SushiSwap adapters Lunar already runs on EVM chains |
 | Stellar Broker | Hosted multi-source swap router (Stellar Expert team) spanning SDEX, classic AMMs, Soroswap, and Aquarius | Its REST/WebSocket router API via the official client library, wrapped in our standard adapter interface |
 
-We are starting with SDEX because it requires no contract integration and covers the deepest XLM/USDC/EURC liquidity, then layering Soroban AMMs on top. Stellar Broker and Soroswap's aggregator overlap with venues we also query directly; duplicate candidate routes are deduplicated at the ranking layer (Section 6).
+We are prioritizing Soroswap and Aquarius — the deepest Soroban-native venues — with SushiSwap and Stellar Broker following. Stellar's native order book (SDEX) is not a direct integration target at this stage; its liquidity remains reachable indirectly through Stellar Broker, which routes across SDEX and classic AMMs. Because Stellar Broker and Soroswap's aggregator overlap with venues we also query directly, duplicate candidate routes are deduplicated at the ranking layer (Section 6).
 
 ### 3.3 Technical approach
 
-- **Native SDEX liquidity** is accessed through **path payments**, Stellar's built-in mechanism for cross-asset transfers routed through the SDEX and/or liquidity pools. Both operation modes are supported:
-  - **Path Payment Strict Send** — the default for standard swap UX, where the user specifies the input amount
-  - **Path Payment Strict Receive** — used where an exact destination amount is required, such as settling an invoice through Lunar Spend
-- **Path discovery** queries Horizon's `/paths/strict-send` and `/paths/strict-receive` endpoints, which return viable multi-hop conversion paths between a source and destination asset. These form the candidate route set before ranking.
-- **Soroban-based AMMs (Aquarius, Soroswap)** are called via Soroban RPC. Router contract IDs are treated as versioned configuration, verified against official documentation at integration time and monitored for changes (e.g., after protocol upgrades or network resets) — never hardcoded permanently.
-- **Adapter interface**: every DEX source implements a common `getQuote(assetIn, assetOut, amount)` and `buildTransaction(route)` interface, so the routing engine treats SDEX, Aquarius, and Soroswap interchangeably.
+- **Soroban-based venues (Aquarius, Soroswap, SushiSwap)** are called via Soroban RPC. Router contract IDs are treated as versioned configuration, verified against official documentation at integration time and monitored for changes (e.g., after protocol upgrades or network resets) — never hardcoded permanently.
+- **Stellar Broker** is queried through its hosted REST/WebSocket router API; returned transaction envelopes are validated against the quoted parameters (assets, amounts, slippage bounds) before they are passed to the wallet for signing.
+- **Adapter interface**: every DEX source implements a common `getQuote(assetIn, assetOut, amount)` and `buildTransaction(route)` interface, so the routing engine treats Aquarius, Soroswap, SushiSwap, and Stellar Broker interchangeably.
 
 ### 3.4 Key dependencies
 
 - `@stellar/stellar-sdk` (official JavaScript SDK, v16+) for transaction building and Soroban contract interaction
-- Horizon API access for SDEX path queries and account state
+- Horizon API access for account state, transaction submission, and streaming
 - Soroban RPC access for AMM contract calls and simulation
+- Stellar Broker router API access (REST/WebSocket) via its client library
 - Trustline handling — Stellar requires an account trustline for any non-native asset; the swap flow detects missing trustlines and handles creation transparently (Section 7.1)
 
 ---
@@ -156,10 +152,10 @@ Extend the routing engine to simulate every candidate execution path — DEX and
 
 ### 6.2 Technical approach
 
-- **Candidate generation**: for a given request, the engine gathers viable routes from the SDEX path payment endpoints, the Soroban AMM adapters, and the cross-chain adapters.
+- **Candidate generation**: for a given request, the engine gathers viable routes from the Soroban DEX adapters (Aquarius, Soroswap, SushiSwap), the Stellar Broker router, and the cross-chain adapters.
 - **Simulation before submission**:
-  - SDEX path payments are pre-validated via Horizon's path-finding endpoints.
   - Soroban contract calls (Aquarius, Soroswap, SushiSwap) use Soroban RPC's `simulateTransaction` to preview the outcome and catch failures — insufficient liquidity, slippage-limit breach, sequence number or time-bounds errors — before the user signs.
+  - Routes returned by Stellar Broker are re-validated against their quotes (assets, amounts, slippage bounds) before signing.
   - Cross-chain routes have their source-chain leg fully validated and their destination-chain outcome estimated; the difference is reflected honestly in the per-route reliability indicator in the UI.
 - **Ranking**: viable routes are ranked by a composite of price, fees, estimated settlement time, and simulation-confirmed reliability. The top route is preselected; alternates remain user-selectable.
 - **Failure filtering**: routes that fail simulation are discarded before display.
@@ -171,7 +167,7 @@ Target: **under 2% of signed, submitted Stellar-route transactions failing on-ch
 
 ### 6.4 Key dependencies
 
-- Soroban RPC simulation endpoint; Horizon path-finding endpoints
+- Soroban RPC simulation endpoint
 - Lunar's shared route-scoring logic, kept chain-agnostic so scoring is consistent across Stellar and other supported chains
 
 ---
@@ -199,7 +195,7 @@ If a preferred route is unavailable or fails simulation, the engine falls back t
 ### 7.5 Testing
 
 - All adapters are built and tested against Stellar **testnet** (Horizon testnet, Soroban testnet RPC) before any mainnet exposure.
-- Failure-path testing — insufficient liquidity, missing trustlines, expired paths, bridge timeout, partial cross-chain failure — is a first-class part of the suite, not an afterthought to happy-path swaps.
+- Failure-path testing — insufficient liquidity, missing trustlines, stale quotes, bridge timeout, partial cross-chain failure — is a first-class part of the suite, not an afterthought to happy-path swaps.
 
 ---
 
@@ -208,11 +204,11 @@ If a preferred route is unavailable or fails simulation, the engine falls back t
 | Risk | Impact | Mitigation |
 |---|---|---|
 | Protocol chain support ≠ asset-pair support — a live protocol may not cover a needed pair | Some cross-chain routes unavailable | Pair-level coverage verified per adapter before it ships; the engine falls back across the other integrated protocols |
-| Soroban RPC reliability / rate limits under production quote load | Degraded quoting or simulation | Provider redundancy and caching at the network layer; SDEX routes (Horizon-only) remain available independently |
-| Thin liquidity on Soroban AMMs for launch assets | Poor pricing vs. expectations | SDEX-first sequencing; routes are ranked on simulated output, so thin sources naturally lose ranking rather than harming users |
+| Soroban RPC reliability / rate limits under production quote load | Degraded quoting or simulation | Provider redundancy and caching at the network layer; Stellar Broker's hosted API provides an independent quoting path |
+| Thin liquidity on Soroban AMMs for launch assets | Poor pricing vs. expectations | Aquarius (~$44M TVL) anchors depth; routes are ranked on simulated output, so thin sources naturally lose ranking rather than harming users |
 | Router contract changes or network resets invalidate pinned addresses | Broken adapter until updated | Contract IDs held as versioned config with monitoring, not hardcoded (Section 7.4) |
 | Cross-chain partial failure (source leg succeeds, destination fails) | Stuck user funds | Defined retry/refund reconciliation path (Section 4.3), reused from existing production bridge infrastructure |
-| Slower-than-expected Soroban adapter work | Delayed aggregation rollout | SDEX-only aggregation remains a shippable fallback while AMM adapters mature |
+| Slower-than-expected Soroban adapter work | Delayed aggregation rollout | Stellar Broker's router API — one API integration spanning multiple venues — is a shippable interim path while direct adapters mature |
 
 ---
 
@@ -220,6 +216,7 @@ If a preferred route is unavailable or fails simulation, the engine falls back t
 
 - Public Horizon and Soroban RPC infrastructure (or commercial providers) remains available for testnet and mainnet.
 - Aquarius, Soroswap, and SushiSwap router contracts remain deployed and documented on mainnet.
+- Stellar Broker's hosted router API remains available — it is also the indirect path to SDEX and classic-AMM liquidity.
 - Protocol support in Section 4.2 was verified against live deployments in August 2026 and is re-checked at integration time — this document intentionally avoids committing to third-party roadmaps.
 
 ---
