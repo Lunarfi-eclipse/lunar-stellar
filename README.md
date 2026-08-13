@@ -154,7 +154,7 @@ Extend the routing engine to simulate every candidate execution path — DEX and
 
 - **Candidate generation**: for a given request, the engine gathers viable routes from the Soroban DEX adapters (Aquarius, Soroswap, SushiSwap), the Stellar Broker router, and the cross-chain adapters.
 - **Simulation before submission**:
-  - Soroban contract calls (Aquarius, Soroswap, SushiSwap) use Soroban RPC's `simulateTransaction` to preview the outcome and catch failures — insufficient liquidity, slippage-limit breach, sequence number or time-bounds errors — before the user signs.
+  - Soroban contract calls (Aquarius, Soroswap, SushiSwap) use Soroban RPC's `simulateTransaction` to preview the outcome and catch failures — insufficient liquidity, slippage-limit breach, sequence number or time-bounds errors before the user signs.
   - Routes returned by Stellar Broker are re-validated against their quotes (assets, amounts, slippage bounds) before signing.
   - Cross-chain routes have their source-chain leg fully validated and their destination-chain outcome estimated; the difference is reflected honestly in the per-route reliability indicator in the UI.
 - **Ranking**: viable routes are ranked by a composite of price, fees, estimated settlement time, and simulation-confirmed reliability. The top route is preselected; alternates remain user-selectable.
